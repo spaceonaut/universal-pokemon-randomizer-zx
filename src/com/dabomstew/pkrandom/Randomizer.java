@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.*;
 
+import com.dabomstew.pkrandom.constants.Species;
 import com.dabomstew.pkrandom.pokemon.*;
 import com.dabomstew.pkrandom.romhandlers.Gen1RomHandler;
 import com.dabomstew.pkrandom.romhandlers.RomHandler;
@@ -198,6 +199,38 @@ public class Randomizer {
         if (settings.getAbilitiesMod() == Settings.AbilitiesMod.RANDOMIZE) {
             romHandler.randomizeAbilities(settings);
             pokemonTraitsChanged = true;
+        }
+
+        if (true) {
+            movesetsChanged = true;
+            Map<Integer, List<MoveLearnt>> movesets = romHandler.getMovesLearnt();
+            System.out.println("Overriding chansey learnset");
+            MoveLearnt recover = new MoveLearnt();
+            recover.move = 105;
+            recover.level = 1;
+            MoveLearnt splash = new MoveLearnt();
+            splash.move = 150;
+            splash.level = 1;
+            movesets.put(Species.chansey, Arrays.asList(splash, recover));
+            romHandler.setMovesLearnt(movesets);
+            wildsChanged = true;
+
+            List<EncounterSet> currentEncounters = romHandler.getEncounters(true);
+            System.out.println("Making all wilds level 100 chanseys");
+            for (EncounterSet area : currentEncounters) {
+                System.out.println(area.displayName);
+                for (Encounter enc : area.encounters) {
+                    System.out.printf("\t%s\n", enc);
+                    enc.level = 100;
+                    enc.maxLevel = 100;
+                    enc.pokemon.number = Species.chansey;
+                }
+            }
+            romHandler.setEncounters(true, currentEncounters);
+
+            // Trigger overrides
+            trainersChanged = true;
+            romHandler.setTrainers(romHandler.getTrainers(), false);
         }
 
         // Log Pokemon traits (stats, abilities, etc) if any have changed
