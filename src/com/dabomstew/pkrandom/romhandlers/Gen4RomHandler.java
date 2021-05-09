@@ -1535,6 +1535,8 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
     private void writeEncountersDPPt(byte[] data, int offset, List<Encounter> encounters, int enclength) {
         for (int i = 0; i < enclength; i++) {
             Encounter enc = encounters.get(i);
+//            enc.level = 100;
+//            enc.pokemon.number = Species.chansey;
             writeLong(data, offset + i * 8, enc.level);
             writeLong(data, offset + i * 8 + 4, enc.pokemon.number);
         }
@@ -2195,6 +2197,10 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
             for (int i = 1; i < trainernum; i++) {
                 byte[] trainer = trainers.files.get(i);
                 Trainer tr = allTrainers.next();
+                if (i == 1) {
+                    tr.poketype = 0x3;
+                    tr.trainerclass = 0x4f;
+                }
                 // preserve original poketype
                 trainer[0] = (byte) tr.poketype;
                 int numPokes = tr.pokemon.size();
@@ -2257,7 +2263,21 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
                         pokeOffs += 2;
                     }
                 }
-                trpokes.files.add(trpoke);
+                if (i == 1) {
+                    trpokes.files.add(new byte[]{
+                            (byte) 0xc4, 0x09, // strength and ???
+                            0x32, 0x00, // level
+                            (byte) 0xd2, 0x01, // species electrivire
+                            0x00, 0x00, // item
+                            (byte) 283 & 0xff, (byte) 1,
+                            0, 0, // Move 2
+                            0, 0, // Move 3
+                            0, 0, // Move 4
+                            0, 0, // Extra bytes
+                    });
+                } else {
+                    trpokes.files.add(trpoke);
+                }
             }
             this.writeNARC(romEntry.getString("TrainerData"), trainers);
             this.writeNARC(romEntry.getString("TrainerPokemon"), trpokes);
