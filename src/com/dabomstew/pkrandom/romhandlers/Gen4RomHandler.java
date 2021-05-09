@@ -2069,6 +2069,13 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
         return output;
     }
 
+    public static String byteArrayToHex(byte[] a) {
+        StringBuilder sb = new StringBuilder(a.length * 2);
+        for(byte b: a)
+            sb.append(String.format("%02x\t", b));
+        return sb.toString();
+    }
+
     @Override
     public List<Trainer> getTrainers() {
         List<Trainer> allTrainers = new ArrayList<>();
@@ -2088,8 +2095,10 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
                 int numPokes = trainer[3] & 0xFF;
                 int pokeOffs = 0;
                 tr.fullDisplayName = tclasses.get(tr.trainerclass) + " " + tnames.get(i - 1);
+                // System.out.printf("%d\t%s\t%s\n", i, tr.fullDisplayName, byteArrayToHex(trainer));
                 // printBA(trpoke);
                 for (int poke = 0; poke < numPokes; poke++) {
+                   // int before = pokeOffs;
                     int ailevel = trpoke[pokeOffs] & 0xFF;
                     int level = trpoke[pokeOffs + 2] & 0xFF;
                     int species = (trpoke[pokeOffs + 4] & 0xFF) + ((trpoke[pokeOffs + 5] & 0x01) << 8);
@@ -2108,9 +2117,13 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
                     tpk.formeSuffix = Gen4Constants.getFormeSuffixByBaseForme(species,formnum);
                     tpk.absolutePokeNumber = Gen4Constants.getAbsolutePokeNumByBaseForme(species,formnum);
                     pokeOffs += 6;
+                  //  System.out.printf("%d\t%d\t%s", i, poke, byteArrayToHex(Arrays.copyOfRange(trpoke, before, pokeOffs)));
                     if (tr.pokemonHaveItems()) {
                         tpk.heldItem = readWord(trpoke, pokeOffs);
                         pokeOffs += 2;
+                      //  System.out.printf("\t%04x", tpk.heldItem);
+                    } else {
+                      //  System.out.printf("\t");
                     }
                     if (tr.pokemonHaveCustomMoves()) {
                         int attack1 = readWord(trpoke, pokeOffs);
@@ -2121,6 +2134,7 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
                         tpk.move2 = attack2;
                         tpk.move3 = attack3;
                         tpk.move4 = attack4;
+                     //   System.out.printf("\t%04x\t%04x\t%04x\t%04x", tpk.move1, tpk.move2, tpk.move3, tpk.move4);
                         pokeOffs += 8;
                     }
                     // Plat/HGSS have another random pokeOffs +=2 here.
@@ -2128,9 +2142,11 @@ public class Gen4RomHandler extends AbstractDSRomHandler {
                         pokeOffs += 2;
                     }
                     tr.pokemon.add(tpk);
+                   // System.out.println();
                 }
                 allTrainers.add(tr);
             }
+            System.out.println();
             if (romEntry.romType == Gen4Constants.Type_DP) {
                 Gen4Constants.tagTrainersDP(allTrainers);
                 Gen4Constants.setCouldBeMultiBattleDP(allTrainers);
